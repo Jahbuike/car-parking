@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <title>Register | Parking System</title>
+</head>
+<body>
+<div class="container">
+    <h2>Staff Registration</h2>
+    
+    <form method="POST">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                <label>{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small style="color: #666; display: block; margin-top: 5px;">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p style="color: #dc2626; font-size: 0.8rem;">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        
+        <button type="submit" class="btn">Request Access</button>
+        <p style="text-align: center; font-size: 0.9rem; margin-top: 1rem;">
+            Already have an account? <a href="{% url 'login' %}">Login</a>
+        </p>
+    </form>
+</div>
+</body>
+</html>

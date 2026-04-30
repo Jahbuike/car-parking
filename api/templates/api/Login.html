@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <title>Login | Parking System</title>
+</head>
+<body>
+<div class="container">
+    <h2>Staff Login</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: #dc2626; font-size: 0.8rem; text-align: center;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" name="username" required>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" required>
+        </div>
+        <button type="submit" class="btn">Sign In</button>
+        <p style="text-align: center; font-size: 0.9rem; margin-top: 1rem;">
+            New staff? <a href="{% url 'register' %}">Request Access</a>
+        </p>
+    </form>
+</div>
+</body>
+</html>

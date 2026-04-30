@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<form action="" method="post">
+    {% csrf_token %}
+    
+    <div style="padding: 20px; background: rgb(84, 84, 228); border-radius: 8px; border: 1px solid #ccc; max-width: 600px; margin: 20px auto; color: #333;">
+        <h2 style="margin-top: 0; color: #1e293b;">🚀 Bulk Generate Tallies</h2>
+        <p style="color: #666;">This will start from the last used number and create the amount specified below.</p>
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        {% for obj in items %}
+            <input type="hidden" name="_selected_action" value="{{ obj.pk }}" />
+        {% endfor %}
+
+        <div style="margin-bottom: 20px;">
+            {{ form.as_p }}
+        </div>
+        
+        <input type="hidden" name="action" value="generate_multiple_tallies" />
+        <input type="hidden" name="post" value="yes" />
+
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <input type="submit" name="apply" value="Confirm and Create" 
+                   style="background: red; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            
+            <a href="." style="color: #64748b; text-decoration: none; font-size: 0.9rem;">Cancel (Go Back)</a>
+        </div>
+    </div>
+</form>
+{% endblock %}

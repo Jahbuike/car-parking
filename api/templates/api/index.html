@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Lot Management</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* Dynamic Banner Styling */
+        .day-banner {
+            background-color: {{ setting.banner_bg_color|default:"#1e293b" }};
+            color: {{ setting.banner_text_color|default:"#ffffff" }};
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Tally Grid Layout */
+        .tally-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* Dynamic Tally Button Styling */
+        .tally-btn {
+            background-color: {{ setting.tally_bg_color|default:"#ffffff" }};
+            border: 2px solid #e5e7eb;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .tally-btn:hover {
+            border-color: {{ setting.tally_active_color|default:"#3b82f6" }};
+        }
+
+        .tally-btn.selected {
+            background-color: {{ setting.tally_active_color|default:"#3b82f6" }} !important;
+            color: white !important;
+            border-color: {{ setting.tally_active_color|default:"#2563eb" }};
+            transform: scale(1.05);
+        }
+
+        /* Hide the actual select input */
+        #tally_number {
+            display: none;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="day-banner">
+        📅 {{ day_text|default:"Parking Management" }}
+    </div>
+
+    <h2>🚗 Parking Entry</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div style="background:#dcfce7; color:#166534; margin-bottom:1rem; text-align:center; padding: 10px; border-radius: 5px; border: 1px solid #bbf7d0;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div id="checkout-section" style="display:none; background: #fee2e2; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ef4444; text-align: center;">
+        <p style="margin: 10px 10px 10px 10px; color: #b91c1c; font-weight: bold;">⚠️ Vehicle is already in the lot.</p>
+        <a id="checkout-link" href="#" class="btn" style="background: #ef4444; color: white; text-decoration: none; display: block; padding: 10px; border-radius: 5px; margin-right: 5%;">Check Out Vehicle</a>
+    </div>
+
+    <form id="parkingForm" method="POST">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Driver Search <span id="match-status" class="status-pill" style="display:none; background: #3b82f6; color: white;">Returning Driver</span></label>
+            <input type="text" id="driver_name" name="name" required placeholder="Search Name, Plate, or Phone..." autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <label>Congregation</label>
+            <input type="text" id="congregation" name="congregation" required>
+        </div>
+
+        <div class="form-group">
+            <label>Plate Number</label>
+            <input type="text" id="plate_number" name="plate_number" required>
+        </div>
+
+        <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="phone_number" name="phone_number" required>
+        </div>
+
+        <div class="form-group">
+            <label>Select Tally Number</label>
+            <select id="tally_number" name="tally" required></select>
+            <div id="tally-button-grid" class="tally-grid">
+                </div>
+        </div>
+
+        <button type="submit" id="register-btn" class="btn">Register Vehicle</button>
+    </form>
+
+    <div style="margin-top: 40px;">
+        <h3>Current Vehicles in Lot</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <thead style="background: #f3f4f6;">
+                <tr>
+                    <th style="padding: 12px; text-align: left;">Tally</th>
+                    <th style="padding: 12px; text-align: left;">Driver / Plate</th>
+                    <th style="padding: 12px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in active_vehicles %}
+                <tr style="border-top: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; font-weight: bold; color: #2563eb;">#{{ record.tally.number }}</td>
+                    <td style="padding: 12px;">
+                        {{ record.driver_name }}<br>
+                        <small style="color: #6b7280;">{{ record.plate_number }}</small>
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        <a href="{% url 'checkout_driver' record.id %}" 
+                           onclick="return confirm('Check out vehicle {{ record.plate_number }}?')"
+                           style="background: #ef4444; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.8rem;">
+                           Check Out
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="padding: 20px; text-align: center; color: #9ca3af;">Lot is empty</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if user.is_superuser %}
+    <div style="margin-top: 50px; padding: 20px; background: #fff1f2; border: 1px solid #fda4af; border-radius: 8px; text-align: center;">
+        <h4 style="color: #9f1239; margin-bottom: 5px;">Admin: End of Day</h4>
+        <p style="font-size: 0.8rem; color: #666; margin-bottom: 15px;">Clear all active vehicles and free all tallies.</p>
+        <a href="{% url 'daily_reset' %}" 
+           onclick="return confirm('DANGER: This clears the entire lot for tomorrow. Continue?')"
+           style="color: #be123c; font-weight: bold; text-decoration: underline;">
+           Perform Global Reset
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Fetch available tallies on load
+async function loadTallies() {
+    const response = await fetch('/api/get-tallies/');
+    const data = await response.json();
+    
+    const select = document.getElementById('tally_number');
+    const grid = document.getElementById('tally-button-grid');
+    
+    grid.innerHTML = '';
+    select.innerHTML = '';
+
+    data.tallies.forEach(tally => {
+        let btn = document.createElement('div');
+        btn.className = 'tally-btn';
+        btn.textContent = tally.number;
+        
+        btn.onclick = () => {
+            document.querySelectorAll('.tally-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            select.innerHTML = `<option value="${tally.id}" selected>${tally.number}</option>`;
+        };
+        grid.appendChild(btn);
+    });
+}
+
+// Multi-Search Logic
+document.getElementById('driver_name').addEventListener('input', async (e) => {
+    const val = e.target.value;
+    const checkoutSection = document.getElementById('checkout-section');
+    const checkoutLink = document.getElementById('checkout-link');
+    const registerBtn = document.getElementById('register-btn');
+    const matchStatus = document.getElementById('match-status');
+    
+    const congInput = document.getElementById('congregation');
+    const plateInput = document.getElementById('plate_number');
+    const phoneInput = document.getElementById('phone_number');
+    
+    if (val.length >= 3) {
+        const response = await fetch(`/api/get-driver/?query=${encodeURIComponent(val)}`);
+        const data = await response.json();
+        
+        if (data.exists) {
+            congInput.value = data.congregation;
+            plateInput.value = data.plate_number;
+            phoneInput.value = data.phone_number;
+            matchStatus.style.display = 'inline-block';
+
+            if (data.is_active) {
+                checkoutSection.style.display = 'block';
+                registerBtn.style.display = 'none';
+                checkoutLink.href = `/checkout/${data.record_id}/`;
+            } else {
+                checkoutSection.style.display = 'none';
+                registerBtn.style.display = 'block';
+            }
+        }
+    } else {
+        if (val.length === 0) {
+            congInput.value = "";
+            plateInput.value = "";
+            phoneInput.value = "";
+        }
+        matchStatus.style.display = 'none';
+        checkoutSection.style.display = 'none';
+        registerBtn.style.display = 'block';
+    }
+});
+
+window.onload = loadTallies;
+</script>
+</body>
+</html>
+
+
+
