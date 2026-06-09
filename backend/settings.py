@@ -78,15 +78,10 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.parse('postgresql://parking_db_ydwo_user:1EWyafX3YeilNozEonN96FJ4OfLRF7Tu@dpg-d7pmc5q8qa3s73c736pg-a.oregon-postgres.render.com/parking_db_ydwo')
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
+    )
 }
-
-# Fallback for local development if DATABASE_URL is not set
-if not DATABASES['default']:
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
